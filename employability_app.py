@@ -6,14 +6,10 @@ import joblib
 from PIL import Image
 import os
 
-# ─────────────────────────────────────────────────────────────
-# 📋 PAGE CONFIG
-# ─────────────────────────────────────────────────────────────
+# Page Config
 st.set_page_config(page_title="🎓 Student Employability Predictor", layout="centered")
 
-# ─────────────────────────────────────────────────────────────
-# 📋 STYLING
-# ─────────────────────────────────────────────────────────────
+# Styling
 st.markdown("""
 <style>
 .stApp {
@@ -29,9 +25,7 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────────────────────
-# 📋 LOAD MODEL & SCALER
-# ─────────────────────────────────────────────────────────────
+# Load model and scaler
 @st.cache_resource
 def load_resources():
     model_path = "employability_predictor.pkl"
@@ -46,28 +40,23 @@ def load_resources():
 
 model, scaler = load_resources()
 
+# Handle missing files
 if model is None or scaler is None:
     st.error("⚠️ Model or scaler file not found. Please ensure 'employability_predictor.pkl' and 'scaler.pkl' exist.")
     st.stop()
 
-# ─────────────────────────────────────────────────────────────
-# 📋 HEADER IMAGE
-# ─────────────────────────────────────────────────────────────
+# Display header image
 try:
     image = Image.open("group-business-people-silhouette-businesspeople-abstract-background_656098-461.avif")
     st.image(image, use_container_width=True)
 except FileNotFoundError:
     st.warning("Header image not found. Skipping image display.")
 
-# ─────────────────────────────────────────────────────────────
-# 📋 TITLE
-# ─────────────────────────────────────────────────────────────
+# App title
 st.markdown("<h2 style='text-align: center;'>🎓 Student Employability Predictor — SVM Model</h2>", unsafe_allow_html=True)
 st.markdown("Fill in the input features to predict employability.")
 
-# ─────────────────────────────────────────────────────────────
-# 📋 FEATURE INPUTS
-# ─────────────────────────────────────────────────────────────
+# Feature Inputs
 feature_columns = [
     'GENDER', 'GENERAL_APPEARANCE', 'GENERAL_POINT_AVERAGE',
     'MANNER_OF_SPEAKING', 'PHYSICAL_CONDITION', 'MENTAL_ALERTNESS',
@@ -75,6 +64,7 @@ feature_columns = [
     'STUDENT_PERFORMANCE_RATING', 'NO_SKILLS', 'Year_of_Graduate'
 ]
 
+# Collect user inputs
 def get_user_inputs():
     col1, col2, col3 = st.columns(3)
     inputs = {}
@@ -99,15 +89,14 @@ def get_user_inputs():
 
     return pd.DataFrame([inputs])[feature_columns]
 
+# Predict Function
 def predict_employability(model, scaler, input_df):
     scaled_input = scaler.transform(input_df)
     prediction = model.predict(scaled_input)[0]
     proba = model.predict_proba(scaled_input)[0]
     return prediction, proba
 
-# ─────────────────────────────────────────────────────────────
-# 📋 PREDICT BUTTON
-# ─────────────────────────────────────────────────────────────
+# Predict button
 input_df = get_user_inputs()
 
 if st.button("Predict"):
@@ -122,9 +111,7 @@ if st.button("Predict"):
     st.info(f"Probability of being Employable: {probability[1] * 100:.2f}%")
     st.info(f"Probability of being Less Employable: {probability[0] * 100:.2f}%")
 
-# ─────────────────────────────────────────────────────────────
-# 📋 FOOTER
-# ─────────────────────────────────────────────────────────────
+# Footer
 st.markdown("---")
 st.caption("""
 Disclaimer: This prediction model is for research and informational purposes only.  
