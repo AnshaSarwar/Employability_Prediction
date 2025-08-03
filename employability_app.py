@@ -1,7 +1,6 @@
 # Import Necessary Libraries
 import streamlit as st
 import pandas as pd
-import numpy as np
 import joblib
 from PIL import Image
 import os
@@ -30,22 +29,17 @@ html, body, [class*="css"] {
 def load_resources():
     model_path = "employability_predictor.pkl"
     scaler_path = "scaler.pkl"
-
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
         return None, None
-
-    model = joblib.load(model_path)
-    scaler = joblib.load(scaler_path)
-    return model, scaler
+    return joblib.load(model_path), joblib.load(scaler_path)
 
 model, scaler = load_resources()
 
-# Handle missing files
 if model is None or scaler is None:
     st.error("⚠️ Model or scaler file not found. Please ensure 'employability_predictor.pkl' and 'scaler.pkl' exist.")
     st.stop()
 
-# Display header image
+# Header image
 try:
     image = Image.open("group-business-people-silhouette-businesspeople-abstract-background_656098-461.avif")
     st.image(image, use_container_width=True)
@@ -64,28 +58,27 @@ feature_columns = [
     'STUDENT_PERFORMANCE_RATING', 'NO_SKILLS', 'Year_of_Graduate'
 ]
 
-# Collect user inputs
 def get_user_inputs():
     col1, col2, col3 = st.columns(3)
     inputs = {}
 
     with col1:
-        inputs['GENDER'] = st.radio("Gender", [0, 1], format_func=lambda x: "Male" if x == 1 else "Female", index=1)
-        inputs['GENERAL_APPEARANCE'] = st.slider("Appearance (1-5)", 1, 5, 3)
-        inputs['GENERAL_POINT_AVERAGE'] = st.number_input("GPA (0.0 - 4.0)", 0.0, 4.0, 3.0, 0.01)
-        inputs['MANNER_OF_SPEAKING'] = st.slider("Speaking (1-5)", 1, 5, 3)
+        inputs['GENDER'] = st.radio("Gender", [0, 1], format_func=lambda x: "Female" if x == 0 else "Male", index=1)
+        inputs['GENERAL_APPEARANCE'] = st.slider("Appearance (2–5)", 2, 5, 3, help="Overall presentation and grooming.")
+        inputs['GENERAL_POINT_AVERAGE'] = st.slider("GPA (2-5)", 2, 5, 3, help="General point average (GPA).")
+        inputs['MANNER_OF_SPEAKING'] = st.slider("Speaking Skills (2–5)", 2, 5, 3, help="Clarity and fluency of speech.")
 
     with col2:
-        inputs['PHYSICAL_CONDITION'] = st.slider("Physical (1-5)", 1, 5, 3)
-        inputs['MENTAL_ALERTNESS'] = st.slider("Alertness (1-5)", 1, 5, 3)
-        inputs['SELF-CONFIDENCE'] = st.slider("Confidence (1-5)", 1, 5, 3)
-        inputs['ABILITY_TO_PRESENT_IDEAS'] = st.slider("Ideas (1-5)", 1, 5, 3)
+        inputs['PHYSICAL_CONDITION'] = st.slider("Physical Condition (2–5)", 2, 5, 3, help="Health and physical fitness.")
+        inputs['MENTAL_ALERTNESS'] = st.slider("Mental Alertness (2–5)", 2, 5, 3, help="Level of attentiveness and response.")
+        inputs['SELF-CONFIDENCE'] = st.slider("Confidence (2–5)", 2, 5, 3, help="Self-confidence in various situations.")
+        inputs['ABILITY_TO_PRESENT_IDEAS'] = st.slider("Idea Presentation (2–5)", 2, 5, 3, help="Ability to present and explain ideas.")
 
     with col3:
-        inputs['COMMUNICATION_SKILLS'] = st.slider("Communication (1-5)", 1, 5, 3)
-        inputs['STUDENT_PERFORMANCE_RATING'] = st.slider("Performance (1-5)", 1, 5, 3)
-        inputs['NO_SKILLS'] = st.radio("Has No Skills", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes", index=0)
-        inputs['Year_of_Graduate'] = st.number_input("Graduation Year", 2019, 2022, 2022)
+        inputs['COMMUNICATION_SKILLS'] = st.slider("Communication Skills (2-5)", 2, 5, 3, help="Effectiveness of verbal and written communication.")
+        inputs['STUDENT_PERFORMANCE_RATING'] = st.slider("Performance Rating (3-4)", 3, 4, 5, help="Overall academic and behavioral performance.")
+        inputs['NO_SKILLS'] = st.selectbox("Number of Skills", [2, 3, 4, 5], index=0, help="Number of essential skills the student lacks.")
+        inputs['Year_of_Graduate'] = st.number_input("Graduation Year", 2019, 2022, 2022, help="Year in which the student graduated.")
 
     return pd.DataFrame([inputs])[feature_columns]
 
@@ -96,9 +89,10 @@ def predict_employability(model, scaler, input_df):
     proba = model.predict_proba(scaled_input)[0]
     return prediction, proba
 
-# Predict button
+# Get Inputs
 input_df = get_user_inputs()
 
+# Prediction
 if st.button("Predict"):
     prediction, probability = predict_employability(model, scaler, input_df)
 
@@ -108,8 +102,8 @@ if st.button("Predict"):
     else:
         st.warning("⚠️ The student is predicted to be **Less Employable**.")
 
-    st.info(f"Probability of being Employable: {probability[1] * 100:.2f}%")
-    st.info(f"Probability of being Less Employable: {probability[0] * 100:.2f}%")
+    st.info(f"📈 Employable Probability: **{probability[1] * 100:.2f}%**")
+    st.info(f"📉 Less Employable Probability: **{probability[0] * 100:.2f}%**")
 
 # Footer
 st.markdown("---")
